@@ -1,0 +1,12 @@
+{
+  "name": "qdp-report-trigger",
+  "version": "0.1.0",
+  "description": "",
+  "author": {
+    "name": "QDP Team - Qlik PS"
+  },
+  "icon": "extension",
+  "preview": "",
+  "type": "visualization",
+  "supernova": true
+}
