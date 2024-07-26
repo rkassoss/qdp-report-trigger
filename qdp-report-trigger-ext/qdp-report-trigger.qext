@@ -6,7 +6,6 @@
     "name": "QDP Team - Qlik PS"
   },
   "icon": "extension",
-  "preview": "",
   "type": "visualization",
   "supernova": true
 }

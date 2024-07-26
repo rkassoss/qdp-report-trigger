@@ -3,10 +3,10 @@ import {
   // useEffect,
   useElement,
   useImperativeHandle,
-  useInteractionState,
+  // useInteractionState,
   useMemo,
-  useModel,
-  useStaleLayout,
+  // useModel,
+  // useStaleLayout,
 } from '@nebula.js/stardust';
 
 import properties from './object-properties';
@@ -30,31 +30,20 @@ export default function supernova(galaxy) {
     ext: ext(galaxy),
     component() {
       const element = useElement();
-      const layout = useStaleLayout();
-      const model = useModel();
       const app = useApp();
-      const interactions = useInteractionState();
 
       async function getCurrentUser() {
         let me;
-        // fetch current user, attach session cookie to the header
-        // we can grab it from window.location.origin if extension is installed on the tenant. in dev, we're at localhost:8000 and it won't work unless we use @qlik/api
-
-        // check if we're not on localhost
-        if (window.location.origin !== 'http://localhost:8000') {
-          const response = await fetch('https://kassovitz.us.qlikcloud.com/api/v1/users/me', {
+        // check if we're on any qlikcloud.com domain
+        if (window.location.origin.includes('qlikcloud.com')) {
+          // create url - append '/api/v1/users/me' to the current domain
+          const url = `${window.location.origin}/api/v1/users/me`;
+          // fetch the current user
+          const response = await fetch(url, {
             credentials: 'include',
           });
+          // parse the response
           me = await response.json();
-        } else {
-          me = {
-            id: '_Mvc3vkMq2YXadXEnYIkb08rXEBXn6L8',
-            tenantId: 'eXKsT_Tl6TWW-hfR_XXonoN-3IPgy3up',
-            status: 'active',
-            subject: 'auth0|a08D000001KMO3xIAH',
-            name: 'Ran Kassovitz',
-            email: 'ran.kassovitz@qlik.com',
-          };
         }
         return me;
       }
@@ -62,55 +51,32 @@ export default function supernova(galaxy) {
       useMemo(() => {
         const button = document.createElement('button');
         button.appendChild(document.createElement('text'));
-        button.firstChild.textContent = 'Click me!';
+        button.firstChild.textContent = 'Trigger Custom Report';
         element.appendChild(button);
 
         button.onclick = async () => {
-          console.log('clicked');
-          console.log({
-            layout, model, app, interactions,
-          });
-          // get app id
           const appId = app.id;
-          console.log('appId', appId);
-          // current user
           const me = await getCurrentUser();
           const userId = me.id;
-          console.log('userId', userId);
-          const bookmarkId = '';
-          // create temporary bookmark //  app.createTemporaryBookmark is not available
-          // const tempBook = await app.createTemporaryBookmark([
-          //   {
-          //     qIncludeVariables: true,
-          //     qIncludeAllPatches: true,
-          //   },
-          //   [
-          //     'value',
-          //   ],
-          // ]);
-          // console.log('tempBook', tempBook);
-          // const bookmarkId = tempBook.id;
-          // console.log('bookmarkId', bookmarkId);
-          // const payload = {
-          //   appId,
-          //   userId,
-          //   // bookmarkId,
-          // };
+          const tempBook = await app.createTemporaryBookmark(
+            {
+              qIncludeVariables: true,
+              qIncludeAllPatches: true,
+            },
+          );
+          const payload = {
+            appId,
+            userId,
+            tempBook,
+          };
+          console.log({ payload });
           // send data to backend
-          // const response = await fetch('https://localhost:4000/qlik-cloud-puppet', {
-          //   method: 'POST',
-          //   headers: {
-          //     'Content-Type': 'application/json',
-          //   },
-          //   body: JSON.stringify(payload),
-          // });
-
-          // fetch with query params
-          const response = await fetch(`https://localhost:4000/qlik-cloud-puppet?appId=${appId}&userId=${userId}&bookmarkId=${bookmarkId}`, {
-            method: 'GET',
+          const response = await fetch('https://localhost:4000/qlik-cloud-puppet', {
+            method: 'POST',
             headers: {
               'Content-Type': 'application/json',
             },
+            body: JSON.stringify(payload),
           });
 
           // response is a pdf file for download
